@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const zoomValue = document.getElementById('zoomValue');
     const generate3DStatus = document.getElementById('generate3DStatus');
     
-    const applyAlignButton = document.getElementById('applyAlignButton');
+    const startAlignButton = document.getElementById('startAlignButton');
     const resetAlignButton = document.getElementById('resetAlignButton');
     const alignPoint1 = document.getElementById('alignPoint1');
     const alignPoint2 = document.getElementById('alignPoint2');
@@ -79,10 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastMouseX = 0;
     let lastMouseY = 0;
     let isPickingColor = false; // Color picker mode
+    let isAlignMode = false; // Alignment mode (only active when button pressed)
     let isEraserMode = false; // Eraser mode
     let currentEraserSize = 20; // Eraser brush size
     let showPixelOutlines = false; // Show pixel cluster outlines
     let isErasing = false; // Currently erasing
+    let eraserImageData = null; // Buffer per operazioni gomma più veloci
+    let lastEraseX = -1; // Ultima posizione X per interpolazione
+    let lastEraseY = -1; // Ultima posizione Y per interpolazione
     
     // State for each side
     const state = {
@@ -152,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         frontCanvas.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
         backCanvas.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
         
-        applyAlignButton.addEventListener('click', applyAlignment);
+        startAlignButton.addEventListener('click', startAlignment);
         resetAlignButton.addEventListener('click', resetAlignPoints);
         
         pickColorButton.addEventListener('click', toggleColorPicker);
@@ -512,7 +516,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Eraser mode with left click
         if (isEraserMode && e.button === 0) {
             isErasing = true;
-            eraseAt(e);
+            const canvas = e.target;
+            const side = canvas === frontCanvas ? 'front' : 'back';
+            if (side === currentSide && state[side].croppedImageData) {
+                // Inizializza buffer immagine
+                const ctx = state[side].croppedImageData.getContext('2d');
+                eraserImageData = ctx.getImageData(0, 0, state[side].croppedImageData.width, state[side].croppedImageData.height);
+                lastEraseX = -1;
+                lastEraseY = -1;
+                eraseAt(e);
+            }
             e.preventDefault();
             return;
         }
@@ -546,6 +559,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleMouseUp() {
+        if (isErasing && eraserImageData) {
+            // Applica modifiche finali
+            const side = currentSide;
+            const ctx = state[side].croppedImageData.getContext('2d');
+            ctx.putImageData(eraserImageData, 0, 0);
+            
+            // Aggiorna immagine visualizzata
+            const resultImg = new Image();
+            resultImg.onload = () => {
+                if (state[side].alignedImage) {
+                    state[side].alignedImage = resultImg;
+                } else {
+                    state[side].originalImage = resultImg;
+                }
+                drawImage(side);
+            };
+            resultImg.src = state[side].croppedImageData.toDataURL();
+            
+            eraserImageData = null;
+            lastEraseX = -1;
+            lastEraseY = -1;
+        }
         isDragging = false;
         isErasing = false;
     }
@@ -598,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const side = canvas === frontCanvas ? 'front' : 'back';
         
         if (side !== currentSide) return;
-        if (!state[side].croppedImageData) return;
+        if (!state[side].croppedImageData || !eraserImageData) return;
         
         const rect = canvas.getBoundingClientRect();
         const canvasX = e.clientX - rect.left;
@@ -617,40 +652,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const imgX = Math.floor(relX * croppedCanvas.width);
         const imgY = Math.floor(relY * croppedCanvas.height);
         
-        // Erase circular area
-        const ctx = croppedCanvas.getContext('2d');
-        const imageData = ctx.getImageData(0, 0, croppedCanvas.width, croppedCanvas.height);
-        const data = imageData.data;
+        // Interpolazione tra ultimo punto e punto corrente per evitare buchi
+        if (lastEraseX !== -1 && lastEraseY !== -1) {
+            const dx = imgX - lastEraseX;
+            const dy = imgY - lastEraseY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const steps = Math.max(1, Math.ceil(distance / 2)); // Più passi = più fluido
+            
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const interpX = Math.round(lastEraseX + dx * t);
+                const interpY = Math.round(lastEraseY + dy * t);
+                eraseCircle(interpX, interpY, eraserImageData, croppedCanvas.width, croppedCanvas.height);
+            }
+        } else {
+            eraseCircle(imgX, imgY, eraserImageData, croppedCanvas.width, croppedCanvas.height);
+        }
         
+        lastEraseX = imgX;
+        lastEraseY = imgY;
+        
+        // Aggiorna visualizzazione in tempo reale (più veloce perché non rigenera l'immagine)
+        const ctx = croppedCanvas.getContext('2d');
+        ctx.putImageData(eraserImageData, 0, 0);
+        drawImage(side);
+    }
+    
+    function eraseCircle(centerX, centerY, imageData, width, height) {
+        const data = imageData.data;
         const radius = currentEraserSize / 2;
         
         for (let dy = -radius; dy <= radius; dy++) {
             for (let dx = -radius; dx <= radius; dx++) {
                 if (dx * dx + dy * dy <= radius * radius) {
-                    const px = imgX + dx;
-                    const py = imgY + dy;
+                    const px = centerX + dx;
+                    const py = centerY + dy;
                     
-                    if (px >= 0 && px < croppedCanvas.width && py >= 0 && py < croppedCanvas.height) {
-                        const idx = (py * croppedCanvas.width + px) * 4;
+                    if (px >= 0 && px < width && py >= 0 && py < height) {
+                        const idx = (py * width + px) * 4;
                         data[idx + 3] = 0; // Set alpha to 0
                     }
                 }
             }
         }
-        
-        ctx.putImageData(imageData, 0, 0);
-        
-        // Update displayed image
-        const resultImg = new Image();
-        resultImg.onload = () => {
-            if (state[side].alignedImage) {
-                state[side].alignedImage = resultImg;
-            } else {
-                state[side].originalImage = resultImg;
-            }
-            drawImage(side);
-        };
-        resultImg.src = croppedCanvas.toDataURL();
     }
     
     // ================== ALIGNMENT ==================
@@ -681,8 +725,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // If selecting align points
-        if (currentSide === side && state[side].alignPoints.length < 2) {
+        // If in alignment mode and selecting align points
+        if (isAlignMode && currentSide === side && state[side].alignPoints.length < 2) {
             state[side].alignPoints.push({ x: imageX, y: imageY });
             
             alignPoint1.textContent = state[side].alignPoints[0] ? `P1: (${state[side].alignPoints[0].x}, ${state[side].alignPoints[0].y})` : 'P1: -';
@@ -694,14 +738,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
                 state[side].rotationAngle = -angle;
                 alignAngle.textContent = `Angolo: ${(angle * 180 / Math.PI).toFixed(2)}°`;
-                applyAlignButton.disabled = false;
+                
+                // Automatically apply alignment after second point
+                applyAlignment();
             }
             
             drawImage(side);
-        } else {
-            // Color selection
-            selectColorAt(imageX, imageY, side);
+            return;
         }
+        
+        // Otherwise, don't do anything (removed automatic color selection)
+    }
+    
+    function startAlignment() {
+        if (!state[currentSide].originalImage) {
+            showStatus('Carica prima un\'immagine!', 'error');
+            return;
+        }
+        
+        isAlignMode = true;
+        startAlignButton.textContent = '⏸️ Calibrazione Attiva...';
+        startAlignButton.classList.remove('btn-primary');
+        startAlignButton.classList.add('btn-warning');
+        startAlignButton.disabled = true;
+        
+        showStatus('Modalità calibrazione attiva - Clicca su 2 punti orizzontali', 'info');
+        
+        // Change cursor
+        frontCanvas.style.cursor = 'crosshair';
+        backCanvas.style.cursor = 'crosshair';
     }
     
     function resetAlignPoints() {
@@ -710,7 +775,20 @@ document.addEventListener('DOMContentLoaded', () => {
         alignPoint1.textContent = 'P1: -';
         alignPoint2.textContent = 'P2: -';
         alignAngle.textContent = 'Angolo: -';
-        applyAlignButton.disabled = true;
+        
+        // Reset alignment mode
+        isAlignMode = false;
+        startAlignButton.textContent = '🔄 Avvia Calibrazione Rotazione';
+        startAlignButton.classList.remove('btn-warning');
+        startAlignButton.classList.add('btn-primary');
+        startAlignButton.disabled = false;
+        
+        // Reset cursor if not in other modes
+        if (!isPickingColor && !isEraserMode) {
+            frontCanvas.style.cursor = 'default';
+            backCanvas.style.cursor = 'default';
+        }
+        
         drawImage(currentSide);
     }
     
@@ -754,11 +832,28 @@ document.addEventListener('DOMContentLoaded', () => {
             state[side].alignedImage = alignedImg;
             state[side].hasAlignment = true;
             state[side].alignPoints = [];
-            resetAlignPoints();
+            
+            // Reset alignment mode
+            isAlignMode = false;
+            startAlignButton.textContent = '🔄 Avvia Calibrazione Rotazione';
+            startAlignButton.classList.remove('btn-warning');
+            startAlignButton.classList.add('btn-primary');
+            startAlignButton.disabled = false;
+            
+            // Reset cursor if not in other modes
+            if (!isPickingColor && !isEraserMode) {
+                frontCanvas.style.cursor = 'default';
+                backCanvas.style.cursor = 'default';
+            }
+            
+            alignPoint1.textContent = 'P1: -';
+            alignPoint2.textContent = 'P2: -';
+            alignAngle.textContent = 'Angolo: -';
+            
             drawImage(side);
             updateStatusMessage();
             cutButton.disabled = false;
-            showStatus('Rotazione applicata!', 'success');
+            showStatus('Rotazione applicata automaticamente!', 'success');
         };
         alignedImg.src = tempCanvas.toDataURL('image/png');
     }
@@ -1196,19 +1291,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const frontCanvas = state.front.croppedImageData;
         const backCanvas = state.back.croppedImageData;
         
-        // Use front canvas dimensions as reference
-        const cardWidth = frontCanvas.width / 10; // Scale down
-        const cardHeight = frontCanvas.height / 10;
+        // Trova dimensioni massime per mantenere proporzioni
+        const maxWidth = Math.max(frontCanvas.width, backCanvas.width);
+        const maxHeight = Math.max(frontCanvas.height, backCanvas.height);
+        
+        // Ridimensiona entrambe le texture alla dimensione massima (così riempiono uniformemente)
+        const targetResolution = 2048; // Limite risoluzione per ridurre dimensioni file
+        let finalWidth = maxWidth;
+        let finalHeight = maxHeight;
+        
+        // Se troppo grande, scala proporzionalmente
+        if (maxWidth > targetResolution || maxHeight > targetResolution) {
+            const scale = Math.min(targetResolution / maxWidth, targetResolution / maxHeight);
+            finalWidth = Math.floor(maxWidth * scale);
+            finalHeight = Math.floor(maxHeight * scale);
+            showStatus(`Ridimensionamento texture a ${finalWidth}x${finalHeight} per ottimizzare dimensioni...`, 'info');
+        }
+        
+        // Crea canvas ridimensionati per entrambe le facce
+        const resizedFrontCanvas = resizeCanvas(frontCanvas, finalWidth, finalHeight);
+        const resizedBackCanvas = resizeCanvas(backCanvas, finalWidth, finalHeight);
+        
+        // Scala per il modello 3D
+        const cardWidth = finalWidth / 10; // Scale down
+        const cardHeight = finalHeight / 10;
         const cardThickness = 0.03; // 0.3mm in scene units
         
-        // Create textures that will stretch to fill the face completely
-        const frontTexture = new THREE.CanvasTexture(frontCanvas);
-        const backTexture = new THREE.CanvasTexture(backCanvas);
+        // Crea texture da canvas ridimensionati
+        const frontTexture = new THREE.CanvasTexture(resizedFrontCanvas);
+        const backTexture = new THREE.CanvasTexture(resizedBackCanvas);
         
         frontTexture.minFilter = THREE.LinearFilter;
         backTexture.minFilter = THREE.LinearFilter;
+        frontTexture.magFilter = THREE.LinearFilter;
+        backTexture.magFilter = THREE.LinearFilter;
         
-        // No wrapping needed - texture will stretch
         frontTexture.wrapS = THREE.ClampToEdgeWrapping;
         frontTexture.wrapT = THREE.ClampToEdgeWrapping;
         backTexture.wrapS = THREE.ClampToEdgeWrapping;
@@ -1233,9 +1350,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create box geometry
         const geometry = new THREE.BoxGeometry(cardWidth, cardHeight, cardThickness);
         
-        // The UV mapping already covers the entire face (0-1 range)
-        // so the texture will automatically stretch to fill it
-        
         // Create mesh
         cardMesh = new THREE.Mesh(geometry, materials);
         scene.add(cardMesh);
@@ -1244,6 +1358,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const edges = new THREE.EdgesGeometry(geometry);
         const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x8b5cf6, linewidth: 2 }));
         cardMesh.add(line);
+    }
+    
+    // Funzione helper per ridimensionare canvas mantenendo aspetto e centrando
+    function resizeCanvas(sourceCanvas, targetWidth, targetHeight) {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        
+        // Calcola scale per riempire completamente (cover behavior)
+        const sourceAspect = sourceCanvas.width / sourceCanvas.height;
+        const targetAspect = targetWidth / targetHeight;
+        
+        let drawWidth, drawHeight, offsetX, offsetY;
+        
+        if (sourceAspect > targetAspect) {
+            // Immagine source più larga: scala in base all'altezza
+            drawHeight = targetHeight;
+            drawWidth = drawHeight * sourceAspect;
+            offsetX = (targetWidth - drawWidth) / 2;
+            offsetY = 0;
+        } else {
+            // Immagine source più alta: scala in base alla larghezza
+            drawWidth = targetWidth;
+            drawHeight = drawWidth / sourceAspect;
+            offsetX = 0;
+            offsetY = (targetHeight - drawHeight) / 2;
+        }
+        
+        // Abilita antialiasing per migliore qualità
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Disegna immagine scalata e centrata
+        ctx.drawImage(sourceCanvas, offsetX, offsetY, drawWidth, drawHeight);
+        
+        return canvas;
     }
     
     function animate() {
@@ -1294,14 +1445,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const exportScene = new THREE.Scene();
         exportScene.add(cardMesh.clone());
         
+        // Opzioni di export ottimizzate per ridurre dimensioni
+        const exportOptions = {
+            binary: true, // GLB format (più compatto)
+            maxTextureSize: 2048, // Limita dimensione texture
+            embedImages: true, // Incorpora immagini nel file
+            includeCustomExtensions: false,
+            truncateDrawRange: true,
+            forcePowerOfTwoTextures: false,
+            // Comprimi texture come JPEG per ridurre dimensioni
+            onlyVisible: true
+        };
+        
         exporter.parse(
             exportScene,
             (result) => {
                 try {
                     if (result instanceof ArrayBuffer) {
                         // Binary GLB format
+                        const sizeInMB = (result.byteLength / (1024 * 1024)).toFixed(2);
                         downloadBinaryFile(result, 'card_3d_model.glb', 'model/gltf-binary');
-                        showStatus('✅ Modello GLB scaricato con successo!', 'success');
+                        showStatus(`✅ Modello GLB scaricato (${sizeInMB} MB)!`, 'success');
                     } else {
                         // JSON GLTF format
                         const output = JSON.stringify(result, null, 2);
@@ -1317,11 +1481,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Errore durante l\'esportazione:', error);
                 showStatus('❌ Errore durante l\'esportazione: ' + error.message, 'error');
             },
-            { 
-                binary: true,
-                embedImages: true,
-                includeCustomExtensions: false
-            }
+            exportOptions
         );
     }
     

@@ -139,6 +139,24 @@
             background-color: #dc2626;
         }
         
+        .btn-warning {
+            background-color: #f59e0b;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+        
         .btn-success {
             background-color: #22c55e;
         }
@@ -287,20 +305,21 @@
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">2️⃣ Allinea (Opzionale)</h3>
                 <div class="bg-blue-50 border border-blue-200 rounded p-2 mb-2 text-xs text-blue-800">
                     <strong>📌 Istruzioni:</strong><br>
-                    1. Clicca su 2 punti orizzontali<br>
-                    2. Premi "Applica Allineamento"<br>
-                    3. Ripeti per l'altro lato
+                    1. Premi "Avvia Calibrazione"<br>
+                    2. Clicca su 2 punti orizzontali<br>
+                    3. Ruota automaticamente<br>
+                    4. Ripeti per l'altro lato
                 </div>
                 <div id="alignControls">
+                    <button id="startAlignButton" class="btn btn-primary text-sm w-full mb-2">
+                        🔄 Avvia Calibrazione Rotazione
+                    </button>
                     <div class="flex space-x-2 mb-2">
                         <span class="text-xs bg-gray-100 px-2 py-1 rounded flex-1" id="alignPoint1">P1: -</span>
                         <span class="text-xs bg-gray-100 px-2 py-1 rounded flex-1" id="alignPoint2">P2: -</span>
                     </div>
                     <div class="text-xs text-gray-500 mb-2" id="alignAngle">Angolo: -</div>
                     <div class="space-y-2">
-                        <button id="applyAlignButton" class="btn btn-primary text-sm" disabled>
-                            ✅ Applica Allineamento
-                        </button>
                         <button id="resetAlignButton" class="btn btn-secondary text-sm">
                             🔄 Reset Punti
                         </button>
