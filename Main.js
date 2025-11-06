@@ -21,16 +21,14 @@ function createWindow() {
 
 // Gestisce la navigazione verso i vari tool
 ipcMain.handle('navigate-to-tool', (event, toolName) => {
-  if (toolName === 'calibration') {
-    mainWindow.loadFile(path.join('tools', 'calibration', 'index.html'));
-  } else if (toolName === 'image-crop') {
+  if (toolName === 'image-crop') {
     mainWindow.loadFile(path.join('tools', 'image-crop', 'index.html'));
   } else if (toolName === 'defect-finder') {
     mainWindow.loadFile(path.join('tools', 'defect-finder', 'index.html'));
-  } else if (toolName === 'report-maker') {
-    mainWindow.loadFile(path.join('tools', 'report-maker', 'index.html'));
+  } else if (toolName === 'auto-3d') {
+    mainWindow.loadFile(path.join('tools', 'auto-3d', 'index.html'));
   } else if (toolName === 'homepage') {
-    mainWindow.loadFile('homepage.html');
+    mainWindow.loadFile('index.html');
   }
   // Aggiungi qui altri tool quando li crei
 });

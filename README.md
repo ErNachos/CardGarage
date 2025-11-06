@@ -8,40 +8,33 @@ Una suite professionale di strumenti per la gestione, analisi e creazione di mod
 
 ## 🛠️ Strumenti Disponibili
 
-### 1. 📏 Calibration Tool
-Sistema avanzato per calibrazione e misurazione di precisione per il grading di carte.
+### 1. 🤖 Auto 3D Creator
+Tool rivoluzionario per generazione automatica di modelli 3D senza interventi manuali.
 
 **Funzionalità:**
-- **Lente di ingrandimento** con zoom 3x per precisione estrema
-- **Sistema di rotazione** per correggere l'orientamento dell'immagine
-- **Calibrazione scala** con riferimento in millimetri
-- **Misurazione 8 punti** con indicatori direzionali colorati
-- **Analisi centratura** con percentuali di distribuzione
-- **Esportazione immagini** con overlay di misure
+- **Auto-orientamento** basato su rilevamento segmenti orizzontali
+- **Rimozione automatica sfondo** con tolleranza colore configurabile
+- **Normalizzazione automatica** forma tra fronte e retro
+- **Generazione 3D** completamente automatica
+- **Zero setup** - carica e vai!
+- **Export GLB/OBJ** diretto
+- **Pipeline intelligente** con 5 fasi automatiche
+- **Controlli configurabili** per ottimizzazione
 
 ### 2. 🔍 Defect Finder Tool
 Strumento per l'identificazione e catalogazione dei difetti sulle carte.
 
 **Funzionalità:**
 - **Lente di ingrandimento** per ispezione dettagliata
-- **Marcatura difetti** su fronte e retro
-- **Sistema di scoring** automatico basato sul numero di difetti
-- **Categorizzazione** per tipo e gravità
-- **Report PDF** esportabile con dettagli completi
+- **Marcatura difetti** fino a 8 punti con visualizzazione circolare
+- **Rotazione manuale** con 2 punti di riferimento
+- **Zoom e Pan** per navigazione precisa
+- **Cattura automatica** aree ingrandite per ogni difetto
+- **Export immagini** con marcatori numerati
+- **Report composito** con miniature difetti
 
-### 3. 📊 Report Maker Tool
-Generatore di report PDF professionali per certificazione e grading.
-
-**Funzionalità:**
-- **Integrazione dati** da Calibration e Defect Finder
-- **Report multi-pagina** con layout professionale
-- **Calcolo grade finale** automatico
-- **Grade manuale** per difetti fronte/retro
-- **Visualizzazione punti calibrazione** sul PDF
-- **Esportazione PDF** pronta per stampa
-
-### 4. 🎨 3D Card Creator
-Tool rivoluzionario per creare modelli 3D realistici di carte.
+### 3. 🎨 3D Card Creator
+Tool per creare modelli 3D realistici di carte con controllo manuale completo.
 
 **Funzionalità:**
 - **Doppia immagine** (fronte e retro)
@@ -69,16 +62,13 @@ CardGarage/
 ├── preload.js                  # Script IPC sicuro
 ├── package.json                # Configurazione npm
 ├── tools/                      # Directory strumenti
-│   ├── calibration/           # Tool calibrazione
+│   ├── auto-3d/               # Auto 3D Creator (Automatico)
 │   │   ├── index.html
-│   │   └── calibration-tool.js
+│   │   └── auto-3d-tool.js
 │   ├── defect-finder/         # Tool rilevamento difetti
 │   │   ├── index.html
 │   │   └── defect-finder-tool.js
-│   ├── report-maker/          # Generatore report
-│   │   ├── index.html
-│   │   └── report-maker-tool.js
-│   └── image-crop/            # 3D Card Creator
+│   └── image-crop/            # 3D Card Creator (Manuale)
 │       ├── index.html
 │       └── image-crop-3d.js
 ├── assets/                     # Risorse condivise
@@ -125,31 +115,28 @@ Visita semplicemente: [https://ernachos.github.io/CardGarage](https://ernachos.g
 
 ## 🎯 Workflow Completo: Dalla Carta al Modello 3D
 
-### 1. Calibrazione (Calibration Tool)
+### Opzione A: Workflow Automatico (Auto 3D Creator)
+- Carica immagine fronte (obbligatoria) e retro (opzionale)
+- Il tool esegue automaticamente:
+  - Auto-orientamento con rilevamento bordi
+  - Rimozione sfondo con tolleranza configurabile
+  - Normalizzazione forme
+  - Generazione modello 3D
+- Scarica GLB pronto per l'uso
+
+### Opzione B: Workflow Manuale
+
+#### 1. Analisi Difetti (Defect Finder)
 - Carica immagine della carta
-- Calibra scala di riferimento
-- Misura centratura con 8 punti
-- Esporta dati
-
-### 2. Analisi Difetti (Defect Finder)
-- Carica fronte e retro
+- Ruota per orientamento corretto (opzionale)
 - Marca difetti con lente di ingrandimento
-- Sistema assegna score automatico
-- Genera report difetti
+- Esporta immagine con marcatori numerati
+- Genera report composito con miniature
 
-### 3. Report Finale (Report Maker)
-- Importa dati calibrazione e difetti
-- Aggiungi grade manuale
-- Genera PDF professionale con 4 pagine:
-  - Centratura
-  - Difetti retro
-  - Difetti fronte
-  - Summary e grade finale
-
-### 4. Modello 3D (3D Card Creator)
+#### 2. Modello 3D Manuale (3D Card Creator)
 - Carica immagini fronte/retro
-- Allinea (opzionale)
-- Rileva colore sfondo
+- Allinea manualmente (opzionale)
+- Rileva colore sfondo manualmente
 - Ritaglia con flood fill intelligente
 - Rifinitura con gomma e contorni
 - Genera modello 3D con texture

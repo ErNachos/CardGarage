@@ -1,59 +1,90 @@
 ## Quick orientation (what this project is)
 
-- This is a small Electron renderer-heavy app. The Electron main process is in `Main.js` (creates a BrowserWindow and points to `preload.js`). The UI and application logic live inline in `index.html` (canvas-based image measurement tool).
+- This is a Card Master Tools Suite built with Electron. The main process is in `Main.js` and manages navigation between different tools. Each tool lives in its own subdirectory under `tools/` with specialized functionality.
 - Start the app with: run `npm install` once, then `npm start` (package.json script runs `electron .`).
 
 ## Important files
 
-- `Main.js` — Electron entry (creates BrowserWindow, sets `preload` to `preload.js`). Example: the BrowserWindow uses `preload: path.join(__dirname, 'preload.js')`.
-- `preload.js` — currently empty; use it to expose safe IPC via `contextBridge` if you add native/Node functionality to the renderer.
-- `index.html` — All renderer code (DOM, canvas drawing, measurement logic) is inline in a single <script>. This is the primary file to edit for UI/behavior.
+- `Main.js` — Electron entry (creates BrowserWindow, handles navigation between tools via IPC). The BrowserWindow uses `preload: path.join(__dirname, 'preload.js')`.
+- `preload.js` — Exposes navigation API via `contextBridge` for secure tool switching.
+- `index.html` — Homepage with tool selection interface.
+- `tools/defect-finder/` — Defect marking tool with magnification and export capabilities.
+- `tools/image-crop/` — 3D card creator with intelligent background removal and GLB export.
 - `package.json` — project metadata and `start` script. Note `electron` is a devDependency (v32) so `npm install` is required before `npm start`.
 
-## Key runtime / data-flow patterns to know
+## Available Tools
 
-- Single-process UI: The measurement app runs mostly in the renderer. The main process only opens the window. There is currently no IPC across processes.
-- Image/measurement flow (see `index.html`):
-  - Image loaded via the hidden `<input id="imageLoader">` → `handleImageUpload` reads it into an `Image()` object.
-  - Calibration uses `points[0]` and `points[1]` (two clicks). The `calculateScale()` function computes `pixelsPerMm` from these points and `#realWidth` input.
-  - Measurement points are stored at `points[2..]` (8 clicks expected). `updateMeasurements()` reads those and fills the results UI (`#resLeft`, `#resRight`, `#resTop`, `#resBottom`).
-  - Coordinate transform helper: `screenToWorld(clientX, clientY)` converts screen coordinates to image coordinates using `pan` and `zoom` state.
+### Defect Finder Tool (`tools/defect-finder/`)
+- **Purpose**: Mark up to 8 defects on card images with rotation and magnification
+- **Key features**: Magnifying glass, rotation alignment, defect circles, export with overlays
+- **Main file**: `defect-finder-tool.js`
 
-## DOM IDs and programmatic hooks (use these when editing)
+### 3D Card Creator (`tools/image-crop/`)
+- **Purpose**: Create 3D models from front/back card images
+- **Key features**: Background removal, flood fill cropping, texture mapping, GLB export
+- **Main file**: `image-crop-3d.js` (ES6 module with Three.js integration)
 
-- Inputs and buttons: `#imageLoader`, `#realWidth`, `#calibrateButton`, `#measureButton`, `#resetPointsButton`, `#zoomSlider`
-- Result elements: `#resLeft`, `#resRight`, `#resTop`, `#resBottom`, `#resHPercent`, `#resVPercent`, `#resPoints`, `#statusMessage`
-- Canvas area: `#canvasContainer`, `#imageCanvas` — all drawing occurs on `imageCanvas` with transforms applied via `pan` and `zoom`.
+## Navigation Pattern
 
-## Project-specific conventions and gotchas
+- Tools are loaded via `ipcMain.handle('navigate-to-tool')` in `Main.js`
+- From homepage: `window.electronAPI.navigateToTool('tool-name')`
+- Supported tools: `'image-crop'`, `'defect-finder'`, `'homepage'`
 
-- Inline renderer logic: Most app logic is embedded directly inside `index.html`. Search and edit the inline <script> when changing behavior — there is no separate bundler or renderer JS file.
-- File name case: repository has `Main.js` (capital M) but `package.json` `main` field references `main.js` (lowercase). On Windows this is OK, but be careful when running or packaging for case-sensitive systems.
-- No tests / no build step: There are no test scripts or bundlers configured. The canonical developer workflow is `npm install` then `npm start` (Electron). Do not expect `npm test` or automated linting unless added.
+## Key runtime / data-flow patterns
 
-## If you add native integration or IPC
+- **Multi-tool architecture**: Each tool is self-contained with its own HTML/JS files
+- **IPC navigation**: Tools communicate with main process for navigation only
+- **Canvas-based UI**: Both tools use HTML5 Canvas for image manipulation
+- **Export capabilities**: Both tools can export processed images/models
 
-- Use `preload.js` to expose only the safe API via `contextBridge.exposeInMainWorld(...)`.
-- In `Main.js` use `ipcMain` handlers to perform privileged tasks and keep UI logic in the renderer.
-- Keep the renderer free of Node globals (currently it is browser-only), unless you intentionally add NodeIntegration.
+## Tool-Specific Patterns
 
-## Small examples (copy-paste safe patterns)
+### Defect Finder
+- **State management**: Tracks rotation points, defect points, and magnifications
+- **Canvas interaction**: Handles mouse events for rotation setup and defect marking
+- **Export**: Generates marked images and composite reports
 
-- Convert a click to world coords (use the existing helper):
-  const world = screenToWorld(e.clientX, e.clientY);
+### 3D Card Creator  
+- **Image processing**: Front/back alignment, background removal, cropping
+- **Three.js integration**: Creates 3D models with texture mapping
+- **Export formats**: GLB (recommended) and OBJ formats
 
-- Read measured left distance (mm):
-  // after calibration and points set
-  const leftMm = measurements.left; // shown in `#resLeft`
+## DOM and Component Structure
+
+- Each tool follows consistent patterns: canvas container, control panels, status messages
+- Tools use similar zoom/pan controls but implement them independently
+- Magnifier components are present in both tools with similar APIs
+
+## Project-specific conventions
+
+- **ES6 modules**: 3D Card Creator uses modern module imports (Three.js)
+- **Self-contained tools**: Each tool directory contains all necessary assets
+- **Consistent styling**: All tools use Tailwind CSS for UI consistency
+- **Export naming**: Generated files include timestamps for uniqueness
+
+## Development Workflow
+
+1. `npm install` (first time only)
+2. `npm start` to launch Electron app  
+3. Navigate between tools from homepage
+4. Each tool can be developed/tested independently
+
+## Adding New Tools
+
+1. Create new directory under `tools/new-tool-name/`
+2. Add `index.html` and tool-specific JS file
+3. Update `Main.js` navigation handler
+4. Add tool card to homepage `index.html`
 
 ## What NOT to change carelessly
 
-- Avoid moving the core canvas drawing logic out-of-context without updating the DOM IDs — many UI controls assume specific IDs.
-- Don't enable NodeIntegration in BrowserWindow; prefer `preload.js` + `contextBridge` for safety.
+- Navigation IPC handlers in `Main.js` — other tools depend on this structure
+- Canvas drawing patterns — both tools have optimized rendering loops
+- Three.js import maps in 3D Card Creator — required for ES6 module loading
+- Export file naming patterns — users depend on timestamp-based naming
 
-## Questions / missing info (please confirm)
+## Questions / missing info
 
-- Preferred packaging/target platforms? (Windows-only vs cross-platform packaging) — affects how Main.js and filenames are treated.
-- Any CI steps or custom start scripts missing from `package.json` we should include?
-
-If anything here is unclear or you'd like different focal points (packaging, tests, splitting renderer code), tell me which area to expand and I will iterate.
+- Additional export formats needed? (Currently supports PNG images and GLB/OBJ models)
+- Performance optimization priorities? (Both tools handle large images well)
+- Additional tool requirements? (Current focus is on defect analysis and 3D modeling)

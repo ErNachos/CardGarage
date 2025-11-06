@@ -25,20 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabFront = document.getElementById('tabFront');
     const tabBack = document.getElementById('tabBack');
     const currentSideIndicator = document.getElementById('currentSideIndicator');
-    
     const zoomSlider = document.getElementById('zoomSlider');
     const zoomValue = document.getElementById('zoomValue');
+    
     const generate3DStatus = document.getElementById('generate3DStatus');
     
     const startAlignButton = document.getElementById('startAlignButton');
     const resetAlignButton = document.getElementById('resetAlignButton');
+    const alignAngle = document.getElementById('alignAngle');
     const alignPoint1 = document.getElementById('alignPoint1');
     const alignPoint2 = document.getElementById('alignPoint2');
-    const alignAngle = document.getElementById('alignAngle');
     
     const pickColorButton = document.getElementById('pickColorButton');
     const colorPicker = document.getElementById('colorPicker');
-    const colorPickerValue = document.getElementById('colorPickerValue');
     const tolerance = document.getElementById('tolerance');
     const toleranceValue = document.getElementById('toleranceValue');
     const minSpotSize = document.getElementById('minSpotSize');
@@ -72,12 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedColor = { r: 255, g: 255, b: 255 };
     let currentTolerance = 10;
     let currentMinSpotSize = 100; // Minimum spot size to keep
-    let zoomLevel = 1.0; // Zoom factor
-    let panX = 0; // Pan offset X
-    let panY = 0; // Pan offset Y
-    let isDragging = false;
-    let lastMouseX = 0;
-    let lastMouseY = 0;
+    let zoomLevel = 1.0;
+    let panX = 0;
+    let panY = 0;
     let isPickingColor = false; // Color picker mode
     let isAlignMode = false; // Alignment mode (only active when button pressed)
     let isEraserMode = false; // Eraser mode
@@ -125,8 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
         frontImageLoader.addEventListener('change', (e) => handleImageUpload(e, 'front'));
         backImageLoader.addEventListener('change', (e) => handleImageUpload(e, 'back'));
         
+        // Tab buttons
         tabFront.addEventListener('click', () => switchTab('front'));
         tabBack.addEventListener('click', () => switchTab('back'));
+        
+        // Zoom
+        zoomSlider.addEventListener('input', handleZoomChange);
         
         frontCanvas.addEventListener('click', (e) => handleCanvasClick(e, 'front'));
         backCanvas.addEventListener('click', (e) => handleCanvasClick(e, 'back'));
@@ -137,10 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         frontCanvas.addEventListener('mouseleave', hideMagnifier);
         backCanvas.addEventListener('mouseleave', hideMagnifier);
         
-        // Zoom and Pan
-        zoomSlider.addEventListener('input', handleZoomChange);
-        frontCanvas.addEventListener('wheel', handleMouseWheel, { passive: false });
-        backCanvas.addEventListener('wheel', handleMouseWheel, { passive: false });
+        // Mouse interactions
         frontCanvas.addEventListener('mousedown', handleMouseDown);
         backCanvas.addEventListener('mousedown', handleMouseDown);
         frontCanvas.addEventListener('mousemove', handleMouseMove);
@@ -150,11 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         frontCanvas.addEventListener('mouseleave', handleMouseUp);
         backCanvas.addEventListener('mouseleave', handleMouseUp);
         
-        // Prevent context menu on right-click and middle-click scroll
+        // Prevent context menu
         frontCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
         backCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
-        frontCanvas.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
-        backCanvas.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
         
         startAlignButton.addEventListener('click', startAlignment);
         resetAlignButton.addEventListener('click', resetAlignPoints);
@@ -191,6 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function switchTab(side) {
         currentSide = side;
         
+        // Update tab buttons
         if (side === 'front') {
             tabFront.classList.add('active');
             tabBack.classList.remove('active');
@@ -201,11 +197,14 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSideIndicator.textContent = 'RETRO';
         }
         
-        // Reset zoom and pan for this side
-        resetZoomPan();
-        
         updateUI();
         updateStatusMessage();
+    }
+    
+    function handleZoomChange(e) {
+        zoomLevel = e.target.value / 100;
+        zoomValue.textContent = e.target.value;
+        drawImage(currentSide);
     }
     
     // ================== IMAGE LOADING ==================
@@ -255,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // Calculate dimensions maintaining aspect ratio
+        // Calculate dimensions maintaining aspect ratio (90% of canvas size)
         const containerRatio = canvas.width / canvas.height;
         const imageRatio = img.width / img.height;
         
@@ -279,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetX = offsetX * zoomLevel + panX;
         offsetY = offsetY * zoomLevel + panY;
         
-        // Save draw data
+        // Save draw data for coordinate transformations
         canvas.imageDrawData = { drawWidth, drawHeight, offsetX, offsetY };
         
         // Clear and draw
@@ -496,21 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         magnifierCanvas.style.display = 'none';
     }
     
-    // ================== ZOOM AND PAN ==================
-    
-    function handleZoomChange() {
-        zoomLevel = parseInt(zoomSlider.value) / 100;
-        zoomValue.textContent = zoomSlider.value;
-        drawImage(currentSide);
-    }
-    
-    function handleMouseWheel(e) {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -10 : 10;
-        const newZoom = parseInt(zoomSlider.value) + delta;
-        zoomSlider.value = Math.max(50, Math.min(400, newZoom));
-        handleZoomChange();
-    }
+    // ================== MOUSE INTERACTIONS ==================
     
     function handleMouseDown(e) {
         // Eraser mode with left click
@@ -529,14 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             return;
         }
-        
-        // Middle button (wheel), Right click, or Shift+Click for pan
-        if (e.button === 1 || e.button === 2 || e.shiftKey) {
-            isDragging = true;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-            e.preventDefault();
-        }
     }
     
     function handleMouseMove(e) {
@@ -544,17 +521,6 @@ document.addEventListener('DOMContentLoaded', () => {
             eraseAt(e);
             e.preventDefault();
             return;
-        }
-        
-        if (isDragging) {
-            const deltaX = e.clientX - lastMouseX;
-            const deltaY = e.clientY - lastMouseY;
-            panX += deltaX;
-            panY += deltaY;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
-            drawImage(currentSide);
-            e.preventDefault();
         }
     }
     
@@ -581,17 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastEraseX = -1;
             lastEraseY = -1;
         }
-        isDragging = false;
         isErasing = false;
-    }
-    
-    function resetZoomPan() {
-        zoomLevel = 1.0;
-        panX = 0;
-        panY = 0;
-        zoomSlider.value = 100;
-        zoomValue.textContent = '100';
-        drawImage(currentSide);
     }
     
     // ================== ERASER TOOL ==================
@@ -944,11 +900,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Save backup before cutting
         state[side].beforeCropImage = img;
         
-        showStatus('Elaborazione ritaglio intelligente...', 'info');
+        showStatus('⏳ Elaborazione ritaglio...', 'info');
+        cutButton.disabled = true;
         
+        // Delay to let UI update
         setTimeout(() => {
             const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
+            const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
             tempCanvas.width = img.width;
             tempCanvas.height = img.height;
             tempCtx.drawImage(img, 0, 0);
@@ -970,72 +928,108 @@ document.addEventListener('DOMContentLoaded', () => {
                 queue.push({ x: img.width - 1, y });
             }
             
-            // Flood fill algorithm
-            while (queue.length > 0) {
-                const { x, y } = queue.shift();
-                const idx = y * img.width + x;
+            let processedPixels = 0;
+            const totalEdgePixels = queue.length;
+            let lastProgressUpdate = 0;
+            
+            // Flood fill algorithm con chunking ottimizzato
+            function processChunk() {
+                const startTime = performance.now();
+                let pixelsInChunk = 0;
+                const maxPixelsPerChunk = 5000; // Limita anche il numero di pixel per chunk
                 
-                if (x < 0 || x >= img.width || y < 0 || y >= img.height || visited[idx]) {
-                    continue;
+                while (queue.length > 0 && (performance.now() - startTime) < 10 && pixelsInChunk < maxPixelsPerChunk) {
+                    const { x, y } = queue.shift();
+                    const idx = y * img.width + x;
+                    
+                    if (x < 0 || x >= img.width || y < 0 || y >= img.height || visited[idx]) {
+                        continue;
+                    }
+                    
+                    const pixelIdx = idx * 4;
+                    const r = data[pixelIdx];
+                    const g = data[pixelIdx + 1];
+                    const b = data[pixelIdx + 2];
+                    
+                    const diff = Math.sqrt(
+                        Math.pow(r - selectedColor.r, 2) +
+                        Math.pow(g - selectedColor.g, 2) +
+                        Math.pow(b - selectedColor.b, 2)
+                    );
+                    
+                    if (diff > currentTolerance) {
+                        continue;
+                    }
+                    
+                    visited[idx] = 1;
+                    data[pixelIdx + 3] = 0; // Set alpha to 0
+                    processedPixels++;
+                    pixelsInChunk++;
+                    
+                    // Add neighbors to queue
+                    queue.push({ x: x + 1, y });
+                    queue.push({ x: x - 1, y });
+                    queue.push({ x, y: y + 1 });
+                    queue.push({ x, y: y - 1 });
                 }
                 
-                const pixelIdx = idx * 4;
-                const r = data[pixelIdx];
-                const g = data[pixelIdx + 1];
-                const b = data[pixelIdx + 2];
-                
-                const diff = Math.sqrt(
-                    Math.pow(r - selectedColor.r, 2) +
-                    Math.pow(g - selectedColor.g, 2) +
-                    Math.pow(b - selectedColor.b, 2)
-                );
-                
-                if (diff > currentTolerance) {
-                    continue;
+                if (queue.length > 0) {
+                    // Update progress ogni 250ms per ridurre overhead
+                    const now = performance.now();
+                    if (now - lastProgressUpdate > 250) {
+                        const progress = Math.min(95, Math.floor((processedPixels / (totalEdgePixels * 10)) * 100));
+                        showStatus(`⏳ Elaborazione: ${progress}%`, 'info');
+                        lastProgressUpdate = now;
+                    }
+                    requestAnimationFrame(processChunk);
+                } else {
+                    finalizeCut();
                 }
-                
-                visited[idx] = 1;
-                data[pixelIdx + 3] = 0; // Set alpha to 0
-                
-                // Add neighbors to queue
-                queue.push({ x: x + 1, y });
-                queue.push({ x: x - 1, y });
-                queue.push({ x, y: y + 1 });
-                queue.push({ x, y: y - 1 });
             }
             
-            tempCtx.putImageData(imageData, 0, 0);
-            
-            // Remove small isolated spots (noise removal)
-            const cleanedCanvas = removeSmallSpots(tempCanvas, currentMinSpotSize);
-            
-            // Auto-crop to content
-            const cropped = autoCropCanvas(cleanedCanvas);
-            
-            state[side].croppedImageData = cropped;
-            state[side].hasCrop = true;
-            
-            // Check if we need to resize to match other side
-            checkAndMatchDimensions();
-            
-            // Draw result
-            const resultImg = new Image();
-            resultImg.onload = () => {
-                if (state[side].alignedImage) {
-                    state[side].alignedImage = resultImg;
-                } else {
-                    state[side].originalImage = resultImg;
-                }
-                drawImage(side);
-                checkGenerate3DReady();
-                updateStatusMessage();
+            function finalizeCut() {
+                showStatus('🔧 Pulizia e ottimizzazione...', 'info');
                 
-                // Show undo button and refine section
-                undoCutButton.style.display = 'block';
-                refineSection.style.display = 'block';
-            };
-            resultImg.src = cropped.toDataURL();
-        }, 100);
+                // Delay per permettere l'aggiornamento dell'UI
+                setTimeout(() => {
+                    tempCtx.putImageData(imageData, 0, 0);
+                    
+                    // Remove small isolated spots (noise removal)
+                    const cleanedCanvas = removeSmallSpots(tempCanvas, currentMinSpotSize);
+                    
+                    // Auto-crop to content
+                    const cropped = autoCropCanvas(cleanedCanvas);
+                    
+                    state[side].croppedImageData = cropped;
+                    state[side].hasCrop = true;
+                    
+                    // Check if we need to resize to match other side
+                    checkAndMatchDimensions();
+                    
+                    // Draw result
+                    const resultImg = new Image();
+                    resultImg.onload = () => {
+                        if (state[side].alignedImage) {
+                            state[side].alignedImage = resultImg;
+                        } else {
+                            state[side].originalImage = resultImg;
+                        }
+                        drawImage(side);
+                        checkGenerate3DReady();
+                        updateStatusMessage();
+                        
+                        // Show undo button and refine section
+                        undoCutButton.style.display = 'block';
+                        refineSection.style.display = 'block';
+                        cutButton.disabled = false;
+                        showStatus('✅ Ritaglio completato!', 'success');
+                    };
+                    resultImg.src = cropped.toDataURL();
+                }, 50);
+            }
+            
+            processChunk();
+        }, 50);
     }
     
     function undoCut() {
@@ -1072,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function removeSmallSpots(canvas, minSize) {
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
         const width = canvas.width;
@@ -1081,36 +1075,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const visited = new Uint8Array(width * height);
         const groups = [];
         
-        // Find all connected components
+        // Find all connected components (ottimizzato)
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const idx = y * width + x;
-                const alpha = data[idx * 4 + 3];
+                const alphaIdx = idx * 4 + 3;
                 
-                if (alpha > 0 && !visited[idx]) {
-                    // Start flood fill to find group
+                if (data[alphaIdx] > 0 && !visited[idx]) {
+                    // Start flood fill to find group (limita dimensione queue)
                     const group = [];
                     const queue = [{ x, y }];
+                    let queuePos = 0; // Use index instead of shift for performance
                     
-                    while (queue.length > 0) {
-                        const pos = queue.shift();
+                    while (queuePos < queue.length && queuePos < 50000) { // Limit max iterations
+                        const pos = queue[queuePos++];
                         const pIdx = pos.y * width + pos.x;
                         
                         if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height || visited[pIdx]) {
                             continue;
                         }
                         
-                        const pAlpha = data[pIdx * 4 + 3];
-                        if (pAlpha === 0) continue;
+                        const pAlphaIdx = pIdx * 4 + 3;
+                        if (data[pAlphaIdx] === 0) continue;
                         
                         visited[pIdx] = 1;
                         group.push(pIdx);
                         
-                        // Add neighbors
-                        queue.push({ x: pos.x + 1, y: pos.y });
-                        queue.push({ x: pos.x - 1, y: pos.y });
-                        queue.push({ x: pos.x, y: pos.y + 1 });
-                        queue.push({ x: pos.x, y: pos.y - 1 });
+                        // Add neighbors (check bounds first)
+                        if (pos.x + 1 < width) queue.push({ x: pos.x + 1, y: pos.y });
+                        if (pos.x - 1 >= 0) queue.push({ x: pos.x - 1, y: pos.y });
+                        if (pos.y + 1 < height) queue.push({ x: pos.x, y: pos.y + 1 });
+                        if (pos.y - 1 >= 0) queue.push({ x: pos.x, y: pos.y - 1 });
                     }
                     
                     groups.push(group);
@@ -1360,39 +1355,20 @@ document.addEventListener('DOMContentLoaded', () => {
         cardMesh.add(line);
     }
     
-    // Funzione helper per ridimensionare canvas mantenendo aspetto e centrando
+    // Funzione helper per ridimensionare canvas stirando per riempire completamente
     function resizeCanvas(sourceCanvas, targetWidth, targetHeight) {
         const canvas = document.createElement('canvas');
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         const ctx = canvas.getContext('2d');
         
-        // Calcola scale per riempire completamente (cover behavior)
-        const sourceAspect = sourceCanvas.width / sourceCanvas.height;
-        const targetAspect = targetWidth / targetHeight;
-        
-        let drawWidth, drawHeight, offsetX, offsetY;
-        
-        if (sourceAspect > targetAspect) {
-            // Immagine source più larga: scala in base all'altezza
-            drawHeight = targetHeight;
-            drawWidth = drawHeight * sourceAspect;
-            offsetX = (targetWidth - drawWidth) / 2;
-            offsetY = 0;
-        } else {
-            // Immagine source più alta: scala in base alla larghezza
-            drawWidth = targetWidth;
-            drawHeight = drawWidth / sourceAspect;
-            offsetX = 0;
-            offsetY = (targetHeight - drawHeight) / 2;
-        }
-        
         // Abilita antialiasing per migliore qualità
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // Disegna immagine scalata e centrata
-        ctx.drawImage(sourceCanvas, offsetX, offsetY, drawWidth, drawHeight);
+        // Stira l'immagine per riempire completamente il canvas target (stretch to fill)
+        // Questo riempie tutta la faccia senza bordi neri
+        ctx.drawImage(sourceCanvas, 0, 0, targetWidth, targetHeight);
         
         return canvas;
     }
@@ -1648,9 +1624,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         // Reset UI
-        frontStatus.textContent = 'Nessuna immagine';
+        frontStatus.textContent = '❌ Mancante';
         frontStatus.className = 'text-xs text-gray-500';
-        backStatus.textContent = 'Nessuna immagine';
+        backStatus.textContent = '❌ Mancante';
         backStatus.className = 'text-xs text-gray-500';
         
         frontImageLoader.value = '';
