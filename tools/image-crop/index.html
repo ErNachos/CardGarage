@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Card Creator - Card Master Tools Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <!-- Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .tool-header {
+            background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 60px;
+        }
+        
+        .main-content {
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+        }
+        
+        .side-panel {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 300px;
+            height: calc(100vh - 60px);
+            background: white;
+            overflow-y: auto;
+        }
+        
+        .work-area {
+            position: fixed;
+            top: 60px;
+            left: 300px;
+            right: 0;
+            height: calc(100vh - 60px);
+            display: flex;
+        }
+        
+        .canvas-section {
+            width: 50%;
+            background-color: #374151;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #frontCanvas, #backCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .canvas-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(139, 92, 246, 0.9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        #viewer3D {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .file-upload-label {
+            display: inline-block;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            background-color: #8b5cf6;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+        }
+        
+        .file-upload-label:hover {
+            background-color: #7c3aed;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: #8b5cf6;
+        }
+        
+        .btn-primary:hover {
+            background-color: #7c3aed;
+        }
+        
+        .btn-secondary {
+            background-color: #ef4444;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #dc2626;
+        }
+        
+        .btn-success {
+            background-color: #22c55e;
+        }
+        
+        .btn-success:hover {
+            background-color: #16a34a;
+        }
+        
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .step-section {
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+        }
+        
+        .step-section.completed {
+            border-left-color: #22c55e;
+        }
+        
+        .step-section.active {
+            background-color: #f5f3ff;
+        }
+        
+        #colorPicker {
+            width: 100%;
+            height: 40px;
+            border: 2px solid #8b5cf6;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: #f3f4f6;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        
+        .tab-button.active {
+            background: #8b5cf6;
+            color: white;
+        }
+        
+        .tab-button:hover:not(.active) {
+            background: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header -->
+    <header class="tool-header">
+        <div class="flex items-center justify-between px-6">
+            <div class="flex items-center space-x-4">
+                <a href="../../index.html" class="btn-back">← Torna alla Homepage</a>
+                <h1 class="text-xl font-bold">🎴 3D Card Creator</h1>
+            </div>
+            <div class="text-sm opacity-80">
+                Card Master Tools Suite v2.0
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content flex">
+        <!-- Pannello Laterale -->
+        <div class="side-panel shadow-lg p-4 space-y-4">
+            <h2 class="text-lg font-bold text-purple-800 border-b-2 border-purple-500 pb-2">Workflow 3D Card</h2>
+
+            <!-- Status Message -->
+            <div id="statusMessage" class="p-3 rounded-md bg-purple-50 border-l-4 border-purple-500 text-purple-700 text-sm">
+                <strong>PASSO 1:</strong> Carica le immagini fronte e retro qui sotto ⬇️
+            </div>
+
+            <!-- Step 1: Load Images -->
+            <section class="step-section active">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">1️⃣ Carica Immagini</h3>
+                <div class="space-y-2">
+                    <div>
+                        <label for="frontImageLoader" class="file-upload-label text-center block text-sm">
+                            📤 Carica Fronte
+                        </label>
+                        <input type="file" id="frontImageLoader" accept="image/*">
+                        <span id="frontStatus" class="text-xs text-gray-500">❌ Mancante</span>
+                    </div>
+                    <div>
+                        <label for="backImageLoader" class="file-upload-label text-center block text-sm">
+                            📤 Carica Retro
+                        </label>
+                        <input type="file" id="backImageLoader" accept="image/*">
+                        <span id="backStatus" class="text-xs text-gray-500">❌ Mancante</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Zoom Controls -->
+            <section>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">🔍 Zoom & Spostamento</h3>
+                <div>
+                    <label for="zoomSlider" class="block text-xs font-medium text-gray-600 mb-1">
+                        Livello: <span id="zoomValue">100</span>%
+                    </label>
+                    <input type="range" id="zoomSlider" min="50" max="400" value="100" step="10"
+                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-xs text-gray-500 mt-1">
+                        🖱️ Rotella: zoom | Click rotella/destro: sposta
+                    </p>
+                </div>
+            </section>
+
+            <!-- Current Working Side Indicator -->
+            <div class="bg-purple-100 border-2 border-purple-400 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-purple-800">Stai lavorando su:</span>
+                    <span id="currentSideIndicator" class="text-sm font-bold text-purple-900">FRONTE</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="tabFront" class="tab-button active flex-1 py-2 text-xs">FRONTE</button>
+                    <button id="tabBack" class="tab-button flex-1 py-2 text-xs">RETRO</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Align (Optional) -->
+            <section class="step-section" id="alignSection">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">2️⃣ Allinea (Opzionale)</h3>
+                <div class="bg-blue-50 border border-blue-200 rounded p-2 mb-2 text-xs text-blue-800">
+                    <strong>📌 Istruzioni:</strong><br>
+                    1. Clicca su 2 punti orizzontali<br>
+                    2. Premi "Applica Allineamento"<br>
+                    3. Ripeti per l'altro lato
+                </div>
+                <div id="alignControls">
+                    <div class="flex space-x-2 mb-2">
+                        <span class="text-xs bg-gray-100 px-2 py-1 rounded flex-1" id="alignPoint1">P1: -</span>
+                        <span class="text-xs bg-gray-100 px-2 py-1 rounded flex-1" id="alignPoint2">P2: -</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2" id="alignAngle">Angolo: -</div>
+                    <div class="space-y-2">
+                        <button id="applyAlignButton" class="btn btn-primary text-sm" disabled>
+                            ✅ Applica Allineamento
+                        </button>
+                        <button id="resetAlignButton" class="btn btn-secondary text-sm">
+                            🔄 Reset Punti
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Cut by Color -->
+            <section class="step-section" id="cutSection">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">3️⃣ Ritaglia Sfondo</h3>
+                <div class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-2 text-xs text-yellow-800">
+                    <strong>✂️ Istruzioni:</strong><br>
+                    1. Premi "Rileva Colore" e clicca sullo sfondo<br>
+                    2. Regola tolleranza se serve<br>
+                    3. Premi "Ritaglia"<br>
+                    4. Ripeti per l'altro lato
+                </div>
+                <div class="space-y-2">
+                    <button id="pickColorButton" class="btn btn-secondary text-sm w-full">
+                        🎨 Rileva Colore dall'Immagine
+                    </button>
+                    <div>
+                        <label for="colorPicker" class="block text-xs font-medium text-gray-600 mb-1">Colore Sfondo:</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="colorPicker" value="#ffffff" class="flex-1">
+                            <span id="colorPickerValue" class="text-xs text-gray-500">#ffffff</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="tolerance" class="block text-xs font-medium text-gray-600 mb-1">
+                            Tolleranza: <span id="toleranceValue">10</span>
+                        </label>
+                        <input type="range" id="tolerance" min="0" max="100" value="10" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="minSpotSize" class="block text-xs font-medium text-gray-600 mb-1">
+                            Rimuovi macchie < <span id="minSpotSizeValue">100</span> px
+                        </label>
+                        <input type="range" id="minSpotSize" min="10" max="500" value="100" step="10"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <p class="text-xs text-gray-500 mt-1">💡 Elimina piccole imperfezioni</p>
+                    </div>
+                    <button id="cutButton" class="btn btn-primary text-sm" disabled>
+                        ✂️ Ritaglia Sfondo
+                    </button>
+                    <button id="undoCutButton" class="btn btn-secondary text-sm" style="display: none;">
+                        ↩️ Annulla Ritaglio
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 3.5: Refine Tools -->
+            <section class="step-section" id="refineSection" style="display: none;">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">3.5️⃣ Rifinitura</h3>
+                <div class="bg-orange-50 border border-orange-200 rounded p-2 mb-2 text-xs text-orange-800">
+                    <strong>🔧 Strumenti:</strong><br>
+                    Perfeziona il ritaglio rimuovendo macchie residue
+                </div>
+                <div class="space-y-2">
+                    <button id="toggleEraserButton" class="btn btn-secondary text-sm w-full">
+                        🖌️ Attiva Gomma
+                    </button>
+                    <div id="eraserControls" style="display: none;">
+                        <label for="eraserSize" class="block text-xs font-medium text-gray-600 mb-1">
+                            Dimensione gomma: <span id="eraserSizeValue">20</span> px
+                        </label>
+                        <input type="range" id="eraserSize" min="5" max="100" value="20" step="5"
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="showOutlines" class="cursor-pointer">
+                        <label for="showOutlines" class="text-xs text-gray-700 cursor-pointer">
+                            📍 Mostra contorni aglomerati
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Generate 3D -->
+            <section class="step-section" id="generate3DSection">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">4️⃣ Genera Modello 3D</h3>
+                <div class="bg-green-50 border border-green-200 rounded p-2 mb-2 text-xs text-green-800">
+                    <strong>🎨 Istruzioni:</strong><br>
+                    Dopo aver ritagliato ENTRAMBI i lati,<br>
+                    premi qui per creare il modello 3D!
+                </div>
+                <div class="space-y-2">
+                    <div class="bg-purple-50 border border-purple-200 rounded p-2 text-xs">
+                        <p class="font-semibold text-purple-800">✨ Specifiche:</p>
+                        <p class="text-purple-700">• Spessore: 0.3 mm</p>
+                        <p class="text-purple-700">• Texture: Fronte + Retro</p>
+                        <p class="text-purple-700">• Forma: Auto da ritaglio</p>
+                    </div>
+                    <button id="generate3DButton" class="btn btn-success text-sm" disabled>
+                        🎨 Crea Modello 3D
+                    </button>
+                    <div id="generate3DStatus" class="text-xs text-gray-500 text-center">
+                        ⚠️ Ritaglia entrambi i lati prima
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 5: Export -->
+            <section class="step-section" id="exportSection" style="display: none;">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">5️⃣ Esporta Modello</h3>
+                <div class="bg-green-50 border border-green-200 rounded p-2 mb-2 text-xs text-green-800">
+                    <strong>💾 Modello 3D Pronto!</strong><br>
+                    Ruota il modello con il mouse<br>
+                    Esporta quando sei soddisfatto
+                </div>
+                <div class="space-y-2">
+                    <button id="exportGLB" class="btn btn-success text-sm">
+                        💾 Scarica GLB (Raccomandato)
+                    </button>
+                    <button id="exportOBJ" class="btn btn-primary text-sm">
+                        💾 Scarica OBJ
+                    </button>
+                    <button id="resetAll" class="btn btn-secondary text-sm">
+                        🔄 Ricomincia da Capo
+                    </button>
+                </div>
+            </section>
+
+            <!-- Quick Guide -->
+            <section class="bg-gray-50 rounded-lg p-3">
+                <h3 class="text-xs font-semibold text-gray-700 mb-2">📖 Guida Rapida</h3>
+                <div class="text-xs text-gray-600 space-y-1">
+                    <p>✅ <strong>1.</strong> Carica fronte e retro</p>
+                    <p>🔄 <strong>2.</strong> Seleziona lato da lavorare (tab)</p>
+                    <p>📐 <strong>3.</strong> (Opzionale) Allinea con 2 click</p>
+                    <p>✂️ <strong>4.</strong> Ritaglia sfondo</p>
+                    <p>🖌️ <strong>5.</strong> (Opzionale) Usa gomma per rifinire</p>
+                    <p>🔁 <strong>6.</strong> Ripeti per l'altro lato</p>
+                    <p>🎨 <strong>7.</strong> Genera modello 3D</p>
+                    <p>💾 <strong>8.</strong> Esporta GLB</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Work Area -->
+        <div class="work-area">
+            <!-- Magnifier Glass -->
+            <canvas id="magnifierCanvas" 
+                    style="display: none; position: fixed; width: 150px; height: 150px; 
+                           border: 3px solid #8b5cf6; border-radius: 50%; 
+                           box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
+                           pointer-events: none; z-index: 1000; background: white;">
+            </canvas>
+
+            <!-- Front Canvas -->
+            <div id="frontSection" class="canvas-section">
+                <div class="canvas-label">FRONTE</div>
+                <canvas id="frontCanvas"></canvas>
+            </div>
+
+            <!-- Back Canvas -->
+            <div id="backSection" class="canvas-section">
+                <div class="canvas-label">RETRO</div>
+                <canvas id="backCanvas"></canvas>
+            </div>
+
+            <!-- 3D Viewer (initially hidden) -->
+            <div id="viewer3DContainer" style="display: none; width: 100%;">
+                <div id="viewer3D"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="image-crop-3d.js"></script>
+</body>
+</html>

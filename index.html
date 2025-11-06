@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Master Tools Suite - Homepage</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+            min-height: 100vh;
+        }
+        
+        /* Gradiente principale verde */
+        .hero-gradient {
+            background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
+        }
+        
+        /* Effetto glassmorphism per le card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Animazioni personalizzate */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .floating { animation: float 3s ease-in-out infinite; }
+        .pulse-glow { animation: pulse-green 2s infinite; }
+        
+        /* Effetto shimmer per le card */
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shimmer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .shimmer:hover::before {
+            animation: shimmer 1s ease-in-out;
+        }
+        
+        /* Header con effetto particelle */
+        .particles-bg {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .particles-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                            radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                            radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
+                            radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.2), transparent);
+            background-repeat: repeat;
+            background-size: 150px 100px;
+            animation: float 6s ease-in-out infinite reverse;
+        }
+        
+        /* Logo styling */
+        .logo-circle {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4);
+        }
+        
+        /* Card styling */
+        .tool-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3), 
+                       0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Bottoni con gradiente */
+        .btn-gradient {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white/90 backdrop-blur-sm shadow-lg particles-bg">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 logo-circle rounded-xl flex items-center justify-center floating pulse-glow">
+                        <span class="text-white font-black text-xl">EN</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black header-gradient">Card Garage</h1>
+                        <p class="text-sm text-gray-600 font-medium">by ErNachos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl mx-auto px-6 py-12">
+        <!-- Welcome Section -->
+        <div class="text-center mb-16">
+            <h2 class="text-5xl font-bold text-white mb-6">Benvenuto nei tuoi Tool</h2>
+            <p class="text-xl text-white/80 max-w-2xl mx-auto">
+                Seleziona uno strumento per iniziare a lavorare. Ogni tool è ottimizzato per specifiche esigenze professionali.
+            </p>
+        </div>
+
+        <!-- Tools Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- Report Maker - Tool Principale -->
+            <div class="tool-card shimmer rounded-2xl p-8 text-center cursor-pointer" onclick="openTool('report-maker')">
+                <div class="tool-icon floating">📋</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Report Maker</h3>
+                <p class="text-gray-600 mb-6">
+                    Strumento unificato: calibrazione + analisi difetti in un unico workflow. 
+                    Esporta report completo in PDF ad alta risoluzione con tutte le misurazioni.
+                </p>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Calibrazione</span>
+                    <span class="px-3 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">Difetti</span>
+                    <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold">PDF Report</span>
+                </div>
+                <button class="w-full btn-gradient text-white font-bold py-3 px-6 rounded-xl">
+                    📄 Apri Tool
+                </button>
+            </div>
+
+            <!-- Tool di Calibrazione -->
+            <div class="tool-card shimmer rounded-2xl p-8 text-center cursor-pointer" onclick="openTool('calibration')">
+                <div class="tool-icon floating">📏</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Tool di Calibrazione</h3>
+                <p class="text-gray-600 mb-6">
+                    Strumento per la misurazione e calibrazione di immagini con precisione millimetrica. 
+                    Include lente di ingrandimento e sistema di rotazione avanzato.
+                </p>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Misurazione</span>
+                    <span class="px-3 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">Calibrazione</span>
+                    <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold">Precisione</span>
+                </div>
+                <button class="w-full btn-gradient text-white font-bold py-3 px-6 rounded-xl">
+                    🚀 Apri Tool
+                </button>
+            </div>
+
+            <!-- Tool 3D Card Creator -->
+            <div class="tool-card shimmer rounded-2xl p-8 text-center cursor-pointer" onclick="openTool('image-crop')">
+                <div class="tool-icon floating">🎴</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">3D Card Creator</h3>
+                <p class="text-gray-600 mb-6">
+                    Crea modelli 3D di carte da fronte e retro. Allinea, ritaglia lo sfondo e genera
+                    un modello 3D con spessore 0.3mm. Esporta in GLB o OBJ.
+                </p>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">3D Model</span>
+                    <span class="px-3 py-1 bg-purple-200 text-purple-900 rounded-full text-sm font-semibold">Fronte/Retro</span>
+                    <span class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm font-semibold">Export GLB</span>
+                </div>
+                <button class="w-full btn-gradient text-white font-bold py-3 px-6 rounded-xl">
+                    🎨 Apri Tool
+                </button>
+            </div>
+
+            <!-- Tool Trova Difetti -->
+            <div class="tool-card shimmer rounded-2xl p-8 text-center cursor-pointer" onclick="openTool('defect-finder')">
+                <div class="tool-icon floating">�</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Trova Difetti</h3>
+                <p class="text-gray-600 mb-6">
+                    Identifica e marca fino a 8 difetti su un'immagine. Include rotazione manuale,
+                    lente di ingrandimento e salvataggio automatico delle aree ingrandite.
+                </p>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Difetti</span>
+                    <span class="px-3 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">Marcatura</span>
+                    <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold">Export</span>
+                </div>
+                <button class="w-full btn-gradient text-white font-bold py-3 px-6 rounded-xl">
+                    🔎 Apri Tool
+                </button>
+            </div>
+
+            <div class="tool-card glass-card rounded-2xl p-8 text-center opacity-60">
+                <div class="tool-icon">📊</div>
+                <h3 class="text-2xl font-bold text-white mb-4">Tool di Analisi</h3>
+                <p class="text-white/80 mb-6">
+                    Strumenti avanzati per l'analisi di dati e reportistica. Dashboard interattive e grafici.
+                </p>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <span class="px-3 py-1 bg-gray-200/50 text-white/70 rounded-full text-sm font-semibold">Coming Soon</span>
+                </div>
+                <button disabled class="w-full bg-gray-400/30 text-white/50 font-bold py-3 px-6 rounded-xl cursor-not-allowed backdrop-blur-sm">
+                    📈 In Sviluppo
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card rounded-2xl p-6 text-center shimmer">
+                <div class="text-3xl font-black text-green-300 mb-2 floating">4</div>
+                <div class="text-white font-bold">Tool Disponibili</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center shimmer">
+                <div class="text-3xl font-black text-green-400 mb-2 floating">∞</div>
+                <div class="text-white font-bold">Progetti Supportati</div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 text-center shimmer">
+                <div class="text-3xl font-black text-green-200 mb-2 floating">✓</div>
+                <div class="text-white font-bold">Precisione Garantita</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white/90 backdrop-blur-sm mt-16">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="text-center text-gray-600">
+                <p>&copy; 2025 <span class="font-bold header-gradient">Card Master Tools Suite</span> by ErNachos. Strumenti professionali per le tue esigenze.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Aggiorna la data corrente
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('it-IT', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Funzione per aprire i tool
+        function openTool(toolName) {
+            if (toolName === 'calibration' || toolName === 'image-crop' || toolName === 'defect-finder' || toolName === 'report-maker') {
+                // Comunica con il processo principale per navigare al tool
+                if (window.electronAPI) {
+                    window.electronAPI.navigateToTool(toolName);
+                } else {
+                    // Fallback per testing
+                    window.location.href = `tools/${toolName}/index.html`;
+                }
+            }
+        }
+
+        // Animazioni di caricamento
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 150);
+            });
+        });
+    </script>
+</body>
+</html>
