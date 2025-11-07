@@ -180,6 +180,23 @@
         <!-- Tools Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
+            <!-- Auto 3D Creator -->
+            <div class="tool-card shimmer rounded-2xl p-8 text-center cursor-pointer" onclick="openTool('auto-3d')">
+                <div class="tool-icon floating">🤖</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Auto 3D Creator</h3>
+                <p class="text-gray-600 mb-6">
+                    Genera automaticamente modelli 3D da carte Pokemon. Rilevamento, raddrizzamento e pulizia automatici.
+                </p>
+                <div class="flex flex-wrap gap-2 justify-center mb-6">
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Automatico</span>
+                    <span class="px-3 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">Pokemon</span>
+                    <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-semibold">Export 3D</span>
+                </div>
+                <button class="w-full btn-gradient text-white font-bold py-3 px-6 rounded-xl">
+                    🚀 Apri Tool
+                </button>
+            </div>
+
             <!-- Tool 3D Card Creator -->
             <div class="tool-card shimmer rounded-2xl p-8 text-center cursor-pointer" onclick="openTool('image-crop')">
                 <div class="tool-icon floating">🎴</div>
@@ -268,7 +285,7 @@
 
         // Funzione per aprire i tool
         function openTool(toolName) {
-            if (toolName === 'image-crop' || toolName === 'defect-finder') {
+            if (toolName === 'image-crop' || toolName === 'defect-finder' || toolName === 'auto-3d') {
                 // Comunica con il processo principale per navigare al tool
                 if (window.electronAPI) {
                     window.electronAPI.navigateToTool(toolName);
