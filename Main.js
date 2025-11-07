@@ -25,8 +25,6 @@ ipcMain.handle('navigate-to-tool', (event, toolName) => {
     mainWindow.loadFile(path.join('tools', 'image-crop', 'index.html'));
   } else if (toolName === 'defect-finder') {
     mainWindow.loadFile(path.join('tools', 'defect-finder', 'index.html'));
-  } else if (toolName === 'auto-3d') {
-    mainWindow.loadFile(path.join('tools', 'auto-3d', 'index-v4.html'));
   } else if (toolName === 'homepage') {
     mainWindow.loadFile('index.html');
   }
