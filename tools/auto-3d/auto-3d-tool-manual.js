@@ -267,15 +267,21 @@ function detectOptimalRotation(canvas) {
         const tempCtx = tempCanvas.getContext('2d');
         tempCtx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
         
-        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const data = imageData.data;
-        
         let bestAngle = 0;
         let bestScore = 0;
         
         // Testa angoli da -10° a +10°
         for (let angle = -10; angle <= 10; angle += 1) {
-            const score = calculateEdgeScore(data, tempCanvas.width, tempCanvas.height, angle);
+            // Ruota il canvas temporaneo per testare questo angolo
+            const rotatedTestCanvas = rotateCanvas(tempCanvas, angle);
+            const imageData = rotatedTestCanvas.getContext('2d').getImageData(
+                0, 0, rotatedTestCanvas.width, rotatedTestCanvas.height
+            );
+            
+            const score = calculateEdgeScore(imageData.data, rotatedTestCanvas.width, rotatedTestCanvas.height);
+            
+            console.log(`  Angle ${angle}°: score ${score.toFixed(2)}`);
+            
             if (score > bestScore) {
                 bestScore = score;
                 bestAngle = angle;
@@ -287,13 +293,22 @@ function detectOptimalRotation(canvas) {
     });
 }
 
-function calculateEdgeScore(data, width, height, angle) {
-    // Calcola score basato su segmenti orizzontali
-    // (simulazione semplificata dell'algoritmo di rilevamento bordi)
-    let horizontalEdges = 0;
+function calculateEdgeScore(data, width, height) {
+    // Calcola score basato su segmenti orizzontali lunghi
+    // (carte ben orientate hanno bordi superiore/inferiore dritti e lunghi)
+    let horizontalSegments = 0;
     const threshold = 30;
+    const minSegmentLength = Math.floor(width * 0.3); // Almeno 30% della larghezza
     
-    for (let y = 0; y < height; y++) {
+    // Analizza bordi orizzontali (top e bottom 20% dell'immagine)
+    const topRegion = Math.floor(height * 0.2);
+    const bottomRegion = Math.floor(height * 0.8);
+    
+    for (let y of [topRegion, bottomRegion]) {
+        if (y >= height) continue;
+        
+        let currentSegmentLength = 0;
+        
         for (let x = 0; x < width - 1; x++) {
             const idx = (y * width + x) * 4;
             const nextIdx = (y * width + (x + 1)) * 4;
@@ -302,13 +317,25 @@ function calculateEdgeScore(data, width, height, angle) {
                         Math.abs(data[idx + 1] - data[nextIdx + 1]) +
                         Math.abs(data[idx + 2] - data[nextIdx + 2]);
             
-            if (diff > threshold) {
-                horizontalEdges++;
+            if (diff < threshold) {
+                // Stesso colore = continua il segmento
+                currentSegmentLength++;
+            } else {
+                // Cambio colore = segmento finito
+                if (currentSegmentLength >= minSegmentLength) {
+                    horizontalSegments++;
+                }
+                currentSegmentLength = 0;
             }
+        }
+        
+        // Controlla l'ultimo segmento
+        if (currentSegmentLength >= minSegmentLength) {
+            horizontalSegments++;
         }
     }
     
-    return horizontalEdges;
+    return horizontalSegments;
 }
 
 function rotateCanvas(sourceCanvas, angle) {

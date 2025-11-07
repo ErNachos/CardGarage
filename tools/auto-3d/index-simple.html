@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto 3D Creator v3.0 - Simple</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-info { background: #3b82f6; }
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        
+        canvas { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .preview-container {
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9fafb;
+            border-radius: 8px;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-8">
+        <!-- Header -->
+        <div class="max-w-7xl mx-auto mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🎴 Auto 3D Creator v3.0</h1>
+            <p class="text-gray-600">Semplice, Preciso, Efficace - Per carte Pokémon</p>
+        </div>
+
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- LEFT: Controls -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Load Images -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">📂 1. Carica Immagini</h2>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Fronte (obbligatorio)
+                        </label>
+                        <input type="file" id="frontImageLoader" accept="image/*" 
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Retro (opzionale)
+                        </label>
+                        <input type="file" id="backImageLoader" accept="image/*" 
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                </div>
+
+                <!-- Front Controls -->
+                <div id="frontControls" class="bg-white rounded-lg shadow-md p-6" style="display: none;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">🎴 2. Fronte</h2>
+                    
+                    <!-- Rotation -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rotazione</label>
+                        <div class="flex gap-2 mb-2">
+                            <button id="rotateFrontCCW" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                                ↶ Sinistra
+                            </button>
+                            <button id="rotateFrontCW" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                                Destra ↷
+                            </button>
+                        </div>
+                        <button id="autoRotateFront" class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-medium text-sm mb-2">
+                            🤖 Auto-Raddrizza
+                        </button>
+                        <button id="undoRotateFront" class="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded text-sm" style="display: none;">
+                            ↶ Annulla Rotazione
+                        </button>
+                    </div>
+                    
+                    <!-- Background Removal -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rimozione Sfondo</label>
+                        <div class="flex items-center gap-2 mb-2">
+                            <label class="text-xs text-gray-600">Tolleranza:</label>
+                            <input type="range" id="frontTolerance" min="10" max="150" value="60" class="flex-1">
+                            <span id="frontToleranceValue" class="text-sm font-mono text-gray-700 w-8">60</span>
+                        </div>
+                        <button id="removeBgFront" class="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded font-medium text-sm">
+                            ✂️ Clicca Sfondo per Rimuovere
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">💡 Clicca sul nero/sfondo dopo aver premuto il pulsante</p>
+                    </div>
+                </div>
+
+                <!-- Back Controls -->
+                <div id="backControls" class="bg-white rounded-lg shadow-md p-6" style="display: none;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">🔄 3. Retro</h2>
+                    
+                    <!-- Rotation -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rotazione</label>
+                        <div class="flex gap-2 mb-2">
+                            <button id="rotateBackCCW" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                                ↶ Sinistra
+                            </button>
+                            <button id="rotateBackCW" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">
+                                Destra ↷
+                            </button>
+                        </div>
+                        <button id="autoRotateBack" class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-medium text-sm mb-2">
+                            🤖 Auto-Raddrizza
+                        </button>
+                        <button id="undoRotateBack" class="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded text-sm" style="display: none;">
+                            ↶ Annulla Rotazione
+                        </button>
+                    </div>
+                    
+                    <!-- Background Removal -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rimozione Sfondo</label>
+                        <div class="flex items-center gap-2 mb-2">
+                            <label class="text-xs text-gray-600">Tolleranza:</label>
+                            <input type="range" id="backTolerance" min="10" max="150" value="60" class="flex-1">
+                            <span id="backToleranceValue" class="text-sm font-mono text-gray-700 w-8">60</span>
+                        </div>
+                        <button id="removeBgBack" class="w-full px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded font-medium text-sm">
+                            ✂️ Clicca Sfondo per Rimuovere
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">💡 Clicca sul nero/sfondo dopo aver premuto il pulsante</p>
+                    </div>
+                </div>
+
+                <!-- 3D Generation -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">🎯 4. Genera 3D</h2>
+                    <button id="generate3D" class="w-full px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-bold text-lg" disabled>
+                        🚀 Genera Modello 3D
+                    </button>
+                </div>
+
+                <!-- Export -->
+                <div id="exportSection" class="bg-white rounded-lg shadow-md p-6" style="display: none;">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">💾 5. Esporta</h2>
+                    <div class="space-y-2">
+                        <button id="exportGLB" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium" disabled>
+                            📦 Scarica GLB
+                        </button>
+                        <button id="exportOBJ" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium" disabled>
+                            📄 Scarica OBJ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Previews & 3D Viewer -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Previews -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Front Preview -->
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">🎴 Anteprima Fronte</h3>
+                        <div class="preview-container">
+                            <canvas id="frontCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Back Preview -->
+                    <div class="bg-white rounded-lg shadow-md p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">🔄 Anteprima Retro</h3>
+                        <div class="preview-container">
+                            <canvas id="backCanvas"></canvas>
+                            <div id="backPlaceholder" class="text-center text-gray-400">
+                                <svg class="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-sm">Nessuna immagine retro</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3D Viewer -->
+                <div id="viewer3D" class="bg-white rounded-lg shadow-md p-4" style="display: none;">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">🎯 Modello 3D Generato</h3>
+                    <div style="width: 100%; height: 500px; background: #f5f5f5; border-radius: 8px;"></div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex items-center">
+                        <span class="status-indicator status-info" id="statusIndicator"></span>
+                        <span class="text-sm text-gray-700" id="statusMessage">Carica un'immagine fronte per iniziare</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="auto-3d-simple.js"></script>
+</body>
+</html>
