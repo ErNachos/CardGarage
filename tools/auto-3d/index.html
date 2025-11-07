@@ -1,714 +1,94 @@
-<!DOCTYPE html><!DOCTYPE html>
-
-<html lang="it"><html lang="it">
-
-<head><head>
-
-    <meta charset="UTF-8">    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Auto 3D Creator - Pokemon Card</title>    <title>Auto 3D Creator - Card Master Tools Suite</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>    <!-- Tailwind CSS -->
-
-    <script type="importmap">    <script src="https://cdn.tailwindcss.com"></script>
-
-    {    <!-- Three.js -->
-
-        "imports": {    <script type="importmap">
-
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",    {
-
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"        "imports": {
-
-        }            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-
-    }            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-
-    </script>        }
-
-    <style>    }
-
-        canvas {     </script>
-
-            max-width: 100%;     <!-- Font Inter -->
-
-            border: 2px solid #e5e7eb;    <link rel="preconnect" href="https://fonts.googleapis.com">
-
-            border-radius: 8px;    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-        }    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-            
-
-        .preview-box {    <style>
-
-            min-height: 300px;        body {
-
-            display: flex;            font-family: 'Inter', sans-serif;
-
-            align-items: center;        }
-
-            justify-content: center;        
-
-            background: #f9fafb;        .tool-header {
-
-            border-radius: 8px;            background: linear-gradient(90deg, #059669 0%, #047857 100%);
-
-        }            color: white;
-
-                    padding: 1rem 0;
-
-        #viewer3D {            position: fixed;
-
-            width: 100%;            top: 0;
-
-            height: 500px;            left: 0;
-
-            border: 2px solid #3b82f6;            right: 0;
-
-            border-radius: 12px;            z-index: 100;
-
-        }            height: 60px;
-
-    </style>        }
-
-</head>        
-
-<body class="bg-gray-50">        .main-content {
-
-    <div class="min-h-screen p-8">            margin-top: 60px;
-
-        <!-- Header -->            height: calc(100vh - 60px);
-
-        <div class="max-w-7xl mx-auto mb-8">        }
-
-            <button onclick="goHome()" class="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium">        
-
-                ← Torna alla Home        .side-panel {
-
-            </button>            position: fixed;
-
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">🎴 Auto 3D Creator</h1>            top: 60px;
-
-            <p class="text-gray-600">Genera automaticamente modelli 3D da carte Pokemon - Rilevamento, raddrizzamento e pulizia automatici</p>            left: 0;
-
-        </div>            width: 320px;
-
-            height: calc(100vh - 60px);
-
-        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">            background: white;
-
-            <!-- LEFT PANEL: Controls -->            border-right: 1px solid #e5e7eb;
-
-            <div class="lg:col-span-1 space-y-6">            overflow-y: auto;
-
-                <!-- Step 1: Load Images -->            z-index: 50;
-
-                <div class="bg-white rounded-lg shadow-md p-6">        }
-
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">📂 1. Carica Immagini</h2>        
-
-                            .content-area {
-
-                    <div class="mb-4">            margin-left: 320px;
-
-                        <label class="block text-sm font-medium text-gray-700 mb-2">            height: calc(100vh - 60px);
-
-                            Fronte (obbligatorio)            background: #f3f4f6;
-
-                        </label>            display: flex;
-
-                        <input type="file" id="frontLoader" accept="image/*"             flex-direction: column;
-
-                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">        }
-
-                    </div>        
-
-                            .preview-section {
-
-                    <div>            flex: 1;
-
-                        <label class="block text-sm font-medium text-gray-700 mb-2">            display: flex;
-
-                            Retro (opzionale)            gap: 1rem;
-
-                        </label>            padding: 1rem;
-
-                        <input type="file" id="backLoader" accept="image/*"         }
-
-                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">        
-
-                    </div>        .image-preview {
-
-                </div>            flex: 1;
-
-            background: white;
-
-                <!-- Step 2: Process -->            border-radius: 8px;
-
-                <div class="bg-white rounded-lg shadow-md p-6">            border: 1px solid #e5e7eb;
-
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">⚙️ 2. Elabora</h2>            display: flex;
-
-                                flex-direction: column;
-
-                    <button id="processBtn" class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-bold text-lg shadow-lg mb-4" disabled>            min-height: 300px;
-
-                        🔄 Rileva e Raddrizza        }
-
-                    </button>        
-
-                            .preview-header {
-
-                    <div class="text-xs text-gray-600 space-y-1">            padding: 0.75rem 1rem;
-
-                        <p>✓ Rilevamento automatico carta</p>            border-bottom: 1px solid #e5e7eb;
-
-                        <p>✓ Raddrizzamento (±10°)</p>            background: #f9fafb;
-
-                        <p>✓ Rimozione sfondo</p>            border-radius: 8px 8px 0 0;
-
-                        <p>✓ Normalizzazione dimensioni</p>            font-weight: 600;
-
-                    </div>            font-size: 0.875rem;
-
-                </div>            color: #374151;
-
+﻿<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto 3D Creator - Pokemon Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
         }
-
-                <!-- Step 3: Generate 3D -->        
-
-                <div class="bg-white rounded-lg shadow-md p-6">        .preview-content {
-
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">🎯 3. Genera 3D</h2>            flex: 1;
-
-                                display: flex;
-
-                    <button id="generate3DBtn" class="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg font-bold text-lg shadow-lg" disabled>            align-items: center;
-
-                        🚀 Crea Modello 3D            justify-content: center;
-
-                    </button>            position: relative;
-
-                </div>            overflow: hidden;
-
-        }
-
-                <!-- Step 4: Export -->        
-
-                <div id="exportPanel" class="bg-white rounded-lg shadow-md p-6" style="display: none;">        .preview-canvas {
-
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">💾 4. Esporta</h2>            max-width: 100%;
-
-                    <div class="space-y-2">            max-height: 100%;
-
-                        <button id="exportGLB" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium">            background: #f9fafb;
-
-                            📦 Scarica GLB            border-radius: 4px;
-
-                        </button>        }
-
-                        <button id="exportOBJ" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium">        
-
-                            📄 Scarica OBJ        .viewer-3d {
-
-                        </button>            flex: 2;
-
-                    </div>            background: white;
-
-                    <p class="text-xs text-gray-500 mt-2">Max 10 MB</p>            border-radius: 8px;
-
-                </div>            border: 1px solid #e5e7eb;
-
-            display: none;
-
-                <!-- Status -->        }
-
-                <div class="bg-white rounded-lg shadow-md p-4">        
-
-                    <div id="status" class="text-sm text-gray-700">        .processing-overlay {
-
-                        <span class="inline-block w-2 h-2 rounded-full bg-gray-400 mr-2"></span>            position: absolute;
-
-                        Pronto            top: 0;
-
-                    </div>            left: 0;
-
-                </div>            right: 0;
-
-            </div>            bottom: 0;
-
-            background: rgba(255, 255, 255, 0.95);
-
-            <!-- CENTER + RIGHT: Preview -->            display: flex;
-
-            <div class="lg:col-span-3 space-y-6">            flex-direction: column;
-
-                <!-- Previews -->            align-items: center;
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">            justify-content: center;
-
-                    <!-- Front Preview -->            z-index: 10;
-
-                    <div class="bg-white rounded-lg shadow-md p-6">        }
-
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Fronte</h3>        
-
-                        <div class="preview-box">        .spinner {
-
-                            <canvas id="frontCanvas"></canvas>            width: 40px;
-
-                        </div>            height: 40px;
-
-                    </div>            border: 4px solid #e5e7eb;
-
-            border-top: 4px solid #059669;
-
-                    <!-- Back Preview -->            border-radius: 50%;
-
-                    <div class="bg-white rounded-lg shadow-md p-6">            animation: spin 1s linear infinite;
-
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Retro</h3>        }
-
-                        <div class="preview-box">        
-
-                            <canvas id="backCanvas"></canvas>        @keyframes spin {
-
-                        </div>            0% { transform: rotate(0deg); }
-
-                    </div>            100% { transform: rotate(360deg); }
-
-                </div>        }
-
-        
-
-                <!-- 3D Viewer -->        .status-indicator {
-
-                <div id="viewer3DContainer" class="bg-white rounded-lg shadow-md p-6" style="display: none;">            width: 12px;
-
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Anteprima 3D</h3>            height: 12px;
-
-                    <div id="viewer3D"></div>            border-radius: 50%;
-
-                    <p class="text-xs text-gray-500 mt-2">Ruota con il mouse • Zoom con la rotellina</p>            display: inline-block;
-
-                </div>            margin-right: 8px;
-
-        }
-
-                <!-- Console Log -->        
-
-                <div class="bg-white rounded-lg shadow-md p-6">        .status-waiting { background-color: #9ca3af; }
-
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">📋 Log</h3>        .status-processing { background-color: #f59e0b; }
-
-                    <div id="console" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs h-48 overflow-y-auto"></div>        .status-success { background-color: #10b981; }
-
-                </div>        .status-error { background-color: #ef4444; }
-
-            </div>        
-
-        </div>        .btn-primary {
-
-    </div>            background: linear-gradient(90deg, #059669, #047857);
-
-            color: white;
-
-    <script type="module" src="auto-3d.js"></script>            border: none;
-
-                padding: 0.75rem 1.5rem;
-
-    <script>            border-radius: 8px;
-
-        function goHome() {            font-weight: 600;
-
-            if (window.require) {            cursor: pointer;
-
-                const { ipcRenderer } = window.require('electron');            transition: all 0.2s;
-
-                ipcRenderer.invoke('navigate-to-tool', 'homepage');        }
-
-            }        
-
-        }        .btn-primary:hover:not(:disabled) {
-
-    </script>            background: linear-gradient(90deg, #047857, #065f46);
-
-</body>            transform: translateY(-1px);
-
-</html>        }
-
-        
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-secondary {
-            background: white;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-secondary:hover:not(:disabled) {
-            background: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 0.5rem 0;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #059669, #047857);
-            transition: width 0.3s ease;
-            border-radius: 4px;
-        }
-    </style>
+    }
+    </script>
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="tool-header">
-        <div class="max-w-full mx-auto px-6 flex items-center justify-between h-full">
-            <div class="flex items-center space-x-4">
-                <button onclick="goBack()" class="text-white hover:text-green-200 transition-colors">
-                    ← Torna alla Homepage
-                </button>
-                <div class="h-8 w-px bg-green-300"></div>
-                <div>
-                    <h1 class="text-xl font-bold">🤖 Auto 3D Creator</h1>
-                    <p class="text-sm text-green-100">Generazione automatica modelli 3D</p>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Side Panel -->
-        <div class="side-panel">
-            <!-- Upload Section -->
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="font-semibold text-gray-800 mb-3">📁 Carica Immagini</h3>
-                
-                <!-- Front Image -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <span class="status-indicator status-waiting" id="frontStatus"></span>
-                        Immagine Fronte (obbligatorio)
-                    </label>
-                    <input type="file" id="frontImageLoader" accept="image/*" 
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                </div>
-                
-                <!-- Back Image -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        <span class="status-indicator status-waiting" id="backStatus"></span>
-                        Immagine Retro (opzionale)
-                    </label>
-                    <input type="file" id="backImageLoader" accept="image/*" 
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                </div>
-                
-                <!-- Process Button -->
-                <button id="processButton" class="btn-primary w-full" disabled style="display: none;">
-                    🚀 Genera Modello 3D Automatico
-                </button>
-            </div>
-            
-            <!-- Front Controls Section -->
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="font-semibold text-gray-800 mb-3">🎴 Controlli Fronte</h3>
-                
-                <!-- Rotation -->
-                <div class="mb-3">
-                    <div class="flex space-x-2">
-                        <button id="rotateFrontButton" class="btn-secondary text-xs flex-1" disabled>
-                            🔄 Auto-Ruota
-                        </button>
-                        <button id="undoRotateFrontButton" class="btn-secondary text-xs" style="display: none;">
-                            ↶ Annulla
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Background Removal -->
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Tolleranza Sfondo
-                    </label>
-                    <div class="flex items-center space-x-2 mb-2">
-                        <input type="range" id="frontTolerance" min="20" max="100" value="50" 
-                               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                        <span id="frontToleranceValue" class="text-sm font-mono text-gray-600 w-8">50</span>
-                    </div>
-                    <button id="removeBgFrontButton" class="btn-secondary text-xs w-full" disabled>
-                        ✂️ Rimuovi Sfondo
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Back Controls Section -->
-            <div class="p-4 border-b border-gray-200" id="backControls" style="display: none;">
-                <h3 class="font-semibold text-gray-800 mb-3">🔄 Controlli Retro</h3>
-                
-                <!-- Rotation -->
-                <div class="mb-3">
-                    <div class="flex space-x-2">
-                        <button id="rotateBackButton" class="btn-secondary text-xs flex-1" disabled>
-                            🔄 Auto-Ruota
-                        </button>
-                        <button id="undoRotateBackButton" class="btn-secondary text-xs" style="display: none;">
-                            ↶ Annulla
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Background Removal -->
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Tolleranza Sfondo
-                    </label>
-                    <div class="flex items-center space-x-2 mb-2">
-                        <input type="range" id="backTolerance" min="20" max="100" value="50" 
-                               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                        <span id="backToleranceValue" class="text-sm font-mono text-gray-600 w-8">50</span>
-                    </div>
-                    <button id="removeBgBackButton" class="btn-secondary text-xs w-full" disabled>
-                        ✂️ Rimuovi Sfondo
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Eraser Tool Section -->
-            <div class="p-4 border-b border-gray-200" id="eraserSection" style="display: none;">
-                <h3 class="font-semibold text-gray-800 mb-3">🖌️ Strumento Gomma</h3>
-                
-                <div class="mb-3">
-                    <button id="toggleEraserButton" class="btn-secondary text-xs w-full">
-                        ✏️ Attiva Gomma
-                    </button>
-                </div>
-                
-                <div id="eraserControls" style="display: none;">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Dimensione Gomma
-                    </label>
-                    <div class="flex items-center space-x-2 mb-2">
-                        <input type="range" id="eraserSize" min="5" max="100" value="20" 
-                               class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                        <span id="eraserSizeValue" class="text-sm font-mono text-gray-600 w-8">20</span>
-                    </div>
-                    <p class="text-xs text-gray-500">Clicca e trascina sulle anteprime per cancellare</p>
-                </div>
-            </div>
-            
-            <!-- Generate Section -->
-            <div class="p-4 border-b border-gray-200">
-                <h3 class="font-semibold text-gray-800 mb-3">🎯 Generazione 3D</h3>
-                
-                <button id="generate3DButton" class="btn-primary w-full text-sm" disabled>
-                    🚀 Genera Modello 3D
-                </button>
-                
-                <p class="text-xs text-gray-500 mt-2 text-center" id="generate3DInfo">
-                    Completa almeno il fronte
-                </p>
-            </div>
-            
-            <!-- Progress Section - Hidden, solo per compatibilità -->
-            <div class="p-4 border-b border-gray-200" id="progressSection" style="display: none;">
-                <h3 class="font-semibold text-gray-800 mb-3">📈 Progresso Elaborazione</h3>
-                
-                <div class="space-y-3">
-                    <div class="step-item">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-700">Analisi immagini</span>
-                            <span class="status-indicator status-waiting" id="stepAnalysis"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="step-item">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-700">Auto-orientamento</span>
-                            <span class="status-indicator status-waiting" id="stepOrientation"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="step-item">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-700">Rimozione sfondo</span>
-                            <span class="status-indicator status-waiting" id="stepBackground"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="step-item">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-700">Normalizzazione</span>
-                            <span class="status-indicator status-waiting" id="stepNormalization"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="step-item">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-sm text-gray-700">Generazione 3D</span>
-                            <span class="status-indicator status-waiting" id="step3D"></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="progress-bar mt-4">
-                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                </div>
-                <p class="text-xs text-center text-gray-600 mt-2" id="progressText">In attesa...</p>
-            </div>
-            
-            <!-- Export Section -->
-            <div class="p-4" id="exportSection" style="display: none;">
-                <h3 class="font-semibold text-gray-800 mb-3">💾 Esporta Modello</h3>
-                
-                <div class="space-y-2">
-                    <button id="exportGLB" class="btn-primary w-full text-sm" disabled>
-                        📦 Scarica GLB (Raccomandato)
-                    </button>
-                    <button id="exportOBJ" class="btn-secondary w-full text-sm" disabled>
-                        📄 Scarica OBJ (Solo Geometria)
-                    </button>
-                </div>
-                
-                <div class="mt-4 p-3 bg-green-50 rounded-lg">
-                    <p class="text-xs text-green-700">
-                        <strong>GLB:</strong> Include texture e materiali. Perfetto per Blender, Unity, etc.
-                    </p>
-                </div>
-            </div>
-        </div>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-7xl mx-auto">
+        <button onclick="goHome()" class="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">← Home</button>
+        <h1 class="text-4xl font-bold mb-4">🎴 Auto 3D Creator</h1>
+        <p class="text-gray-600 mb-8">Genera modelli 3D automaticamente da carte Pokemon</p>
         
-        <!-- Content Area -->
-        <div class="content-area">
-            <!-- Preview Section -->
-            <div class="preview-section">
-                <!-- Front Preview -->
-                <div class="image-preview">
-                    <div class="preview-header">
-                        🎴 Anteprima Fronte
-                    </div>
-                    <div class="preview-content" id="frontPreviewContainer" style="position: relative;">
-                        <canvas id="frontCanvas" class="preview-canvas" style="cursor: move;"></canvas>
-                        <!-- Zoom Controls -->
-                        <div style="position: absolute; top: 8px; right: 8px; display: none; flex-direction: column; gap: 4px;" id="frontZoomControls">
-                            <button id="zoomInFront" class="bg-white hover:bg-gray-100 rounded-lg p-2 shadow-md text-gray-700 transition-all" title="Zoom In">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                                </svg>
-                            </button>
-                            <button id="zoomOutFront" class="bg-white hover:bg-gray-100 rounded-lg p-2 shadow-md text-gray-700 transition-all" title="Zoom Out">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6" />
-                                </svg>
-                            </button>
-                            <button id="resetZoomFront" class="bg-white hover:bg-gray-100 rounded-lg p-2 shadow-md text-gray-700 transition-all" title="Reset Zoom">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </button>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Controls -->
+            <div class="space-y-4">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="font-bold mb-4">1. Carica Immagini</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm mb-1">Fronte</label>
+                            <input type="file" id="frontLoader" accept="image/*" class="text-sm">
                         </div>
-                        <div class="processing-overlay" id="frontProcessing" style="display: none;">
-                            <div class="spinner"></div>
-                            <p class="mt-4 text-sm text-gray-600">Elaborazione fronte...</p>
+                        <div>
+                            <label class="block text-sm mb-1">Retro (opz.)</label>
+                            <input type="file" id="backLoader" accept="image/*" class="text-sm">
                         </div>
                     </div>
                 </div>
                 
-                <!-- Back Preview -->
-                <div class="image-preview">
-                    <div class="preview-header">
-                        🔄 Anteprima Retro
-                    </div>
-                    <div class="preview-content" id="backPreviewContainer" style="position: relative;">
-                        <canvas id="backCanvas" class="preview-canvas" style="cursor: move;"></canvas>
-                        <!-- Zoom Controls -->
-                        <div style="position: absolute; top: 8px; right: 8px; display: none; flex-direction: column; gap: 4px;" id="backZoomControls">
-                            <button id="zoomInBack" class="bg-white hover:bg-gray-100 rounded-lg p-2 shadow-md text-gray-700 transition-all" title="Zoom In">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                                </svg>
-                            </button>
-                            <button id="zoomOutBack" class="bg-white hover:bg-gray-100 rounded-lg p-2 shadow-md text-gray-700 transition-all" title="Zoom Out">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM7 10h6" />
-                                </svg>
-                            </button>
-                            <button id="resetZoomBack" class="bg-white hover:bg-gray-100 rounded-lg p-2 shadow-md text-gray-700 transition-all" title="Reset Zoom">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="processing-overlay" id="backProcessing" style="display: none;">
-                            <div class="spinner"></div>
-                            <p class="mt-4 text-sm text-gray-600">Elaborazione retro...</p>
-                        </div>
-                        <div class="text-center text-gray-500 text-sm" id="backPlaceholder">
-                            Carica un'immagine retro per vedere l'anteprima
-                        </div>
-                    </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="font-bold mb-4">2. Elabora</h2>
+                    <button id="processBtn" disabled class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-300">
+                        🔄 Rileva e Pulisci
+                    </button>
                 </div>
                 
-                <!-- 3D Viewer -->
-                <div class="viewer-3d" id="viewer3DContainer">
-                    <div class="preview-header">
-                        🎯 Modello 3D Generato
-                    </div>
-                    <div class="preview-content">
-                        <div id="viewer3D" style="width: 100%; height: 100%;"></div>
-                    </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="font-bold mb-4">3. Genera 3D</h2>
+                    <button id="generate3DBtn" disabled class="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-300">
+                        🚀 Crea 3D
+                    </button>
                 </div>
+                
+                <div id="exportPanel" class="bg-white p-6 rounded-lg shadow" style="display:none">
+                    <h2 class="font-bold mb-4">4. Esporta</h2>
+                    <button id="exportGLB" class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 mb-2">GLB</button>
+                    <button id="exportOBJ" class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">OBJ</button>
+                </div>
+                
+                <div class="bg-gray-800 text-green-400 p-4 rounded text-xs font-mono h-64 overflow-y-auto" id="console"></div>
             </div>
             
-            <!-- Status Bar -->
-            <div class="bg-white border-t border-gray-200 px-4 py-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-4">
-                        <span class="status-indicator status-waiting" id="globalStatus"></span>
-                        <span class="text-sm text-gray-700" id="statusMessage">Carica almeno l'immagine fronte per iniziare</span>
+            <!-- Previews -->
+            <div class="lg:col-span-3 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="font-bold mb-2">Fronte</h3>
+                        <canvas id="frontCanvas" class="w-full border rounded"></canvas>
                     </div>
-                    <div class="text-xs text-gray-500" id="debugInfo"></div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="font-bold mb-2">Retro</h3>
+                        <canvas id="backCanvas" class="w-full border rounded"></canvas>
+                    </div>
+                </div>
+                
+                <div id="viewer3DContainer" class="bg-white p-4 rounded-lg shadow" style="display:none">
+                    <h3 class="font-bold mb-2">Anteprima 3D</h3>
+                    <div id="viewer3D" style="width:100%; height:500px"></div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Success Modal -->
-    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div class="text-center">
-                <div class="text-6xl mb-4">🎉</div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Modello 3D Generato!</h3>
-                <p class="text-gray-600 mb-6">Il tuo modello 3D è stato creato automaticamente con successo.</p>
-                <div class="flex space-x-3">
-                    <button onclick="closeSuccessModal()" class="btn-secondary flex-1">Continua</button>
-                    <button onclick="downloadGLB()" class="btn-primary flex-1">📦 Scarica GLB</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="auto-3d-tool-manual.js"></script>
+    
+    <script type="module" src="auto-3d.js"></script>
+    <script>
+        function goHome() {
+            if (window.require) {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.invoke('navigate-to-tool', 'homepage');
+            }
+        }
+    </script>
 </body>
 </html>
